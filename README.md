@@ -1,3 +1,16 @@
+Prisma Setup
+
+This project uses Prisma
+as the ORM. To get Prisma running:
+
+```bash
+npx prisma generate
+```
+
+```bash
+npx prisma migrate dev --name init
+```
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started
