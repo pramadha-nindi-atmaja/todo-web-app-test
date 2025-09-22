@@ -4,7 +4,6 @@ import { useSession, signOut } from "next-auth/react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
 import { LogOut, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { AddTaskDialog } from "@/components/addTaskDialog";
@@ -179,10 +178,6 @@ export default function DashboardPage() {
             </Card>
           ) : (
             tasks
-              .sort((a, b) => {
-                if (a.done !== b.done) return a.done ? 1 : -1;
-                return b.priority - a.priority;
-              })
               .map((task) => (
                 <Card key={task.id} className={task.done ? "opacity-60" : ""}>
                   <CardContent className="py-4">
