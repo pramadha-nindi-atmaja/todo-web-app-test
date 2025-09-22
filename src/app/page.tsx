@@ -4,11 +4,21 @@ import { useSession, signOut } from "next-auth/react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { LogOut, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { AddTaskDialog } from "@/components/addTaskDialog";
+import {
+  Pagination,
+  PaginationItem,
+  PaginationPrevious,
+  PaginationNext,
+  PaginationLink,
+  PaginationEllipsis,
+  PaginationContent,
+} from "@/components/ui/pagination";
+import {Input} from "@/components/ui/input";
+import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select";
 
 interface Task {
   id: number;
@@ -23,24 +33,32 @@ export default function DashboardPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showAddDialog, setShowAddDialog] = useState(false);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [pageSize, setPageSize] = useState(5);
+  const [search, setSearch] = useState("");
   const router = useRouter();
 
   useEffect(() => {
     console.log(status);
 
     if (status === "authenticated") {
-      fetchTasks();
+      fetchTasks(page);
     } else if (status === "unauthenticated") {
       router.push(`/login`);
     }
-  }, [status, router]);
+  }, [status,page,router]);
 
-  const fetchTasks = async () => {
+  const fetchTasks = async (page: number, query = "", size = pageSize) => {
+    setIsLoading(true);
     try {
-      const response = await fetch("/api/tasks");
+      const response = await fetch(
+          `/api/tasks?page=${page}&pageSize=${size}&q=${encodeURIComponent(query)}`
+      );
       if (response.ok) {
         const data = await response.json();
         setTasks(data.items);
+        setTotalPages(data.totalPages);
       }
     } catch (error) {
       console.error("Failed to fetch tasks:", error);
@@ -83,32 +101,6 @@ export default function DashboardPage() {
     }
   };
 
-  const getPriorityColor = (priority: number) => {
-    switch (priority) {
-      case 1:
-        return "bg-green-100 text-green-800";
-      case 2:
-        return "bg-yellow-100 text-yellow-800";
-      case 3:
-        return "bg-red-100 text-red-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
-
-  const getPriorityText = (priority: number) => {
-    switch (priority) {
-      case 1:
-        return "Low";
-      case 2:
-        return "Medium";
-      case 3:
-        return "High";
-      default:
-        return "Normal";
-    }
-  };
-
   if (status === "loading" || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -116,6 +108,10 @@ export default function DashboardPage() {
       </div>
     );
   }
+  const handleSearch = () => {
+    setPage(1);
+    fetchTasks(1, search);
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -135,18 +131,40 @@ export default function DashboardPage() {
       </header>
 
       <main className="container mx-auto px-4 py-8">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h2 className="text-xl font-semibold">Your Tasks</h2>
-            <p className="text-muted-foreground">
-              {tasks.filter((t) => !t.done).length} pending,{" "}
-              {tasks.filter((t) => t.done).length} completed
-            </p>
+        <div className="mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="text-xl font-semibold">Your Tasks</h2>
+              <p className="text-muted-foreground">
+                {tasks.filter((t) => !t.done).length} pending,{" "}
+                {tasks.filter((t) => t.done).length} completed
+              </p>
+            </div>
+            <Button onClick={() => setShowAddDialog(true)}>
+              <Plus className="w-4 h-4 mr-2" />
+              Add Task
+            </Button>
           </div>
-          <Button onClick={() => setShowAddDialog(true)}>
-            <Plus className="w-4 h-4 mr-2" />
-            Add Task
-          </Button>
+
+          <div className="flex gap-2">
+            <Input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search tasks..."
+                className=""
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleSearch()
+                }}
+            />
+            <Button
+                onClick={() => {
+                  handleSearch()
+                }}
+            >
+              Search
+            </Button>
+          </div>
         </div>
 
         <div className="grid gap-4">
@@ -187,9 +205,6 @@ export default function DashboardPage() {
                           {new Date(task.createdAt).toLocaleDateString()}
                         </p>
                       </div>
-                      <Badge className={getPriorityColor(task.priority)}>
-                        {getPriorityText(task.priority)}
-                      </Badge>
                       <Button
                         variant="destructive"
                         size="sm"
@@ -203,6 +218,73 @@ export default function DashboardPage() {
               ))
           )}
         </div>
+        <Pagination>
+          <PaginationContent className="justify-center mt-6">
+            <Select
+              value={pageSize.toString()}
+              onValueChange={(value) => {
+                const newSize = parseInt(value, 10);
+                 setPageSize(newSize);
+                 setPage(1);
+                 fetchTasks(1, search, newSize);
+              }}
+            >
+              <SelectTrigger className="w-24">
+                <SelectValue placeholder="Select" />
+              </SelectTrigger>
+              <SelectContent>
+                {[5, 10, 20, 50].map((size) => (
+                    <SelectItem key={size} value={size.toString()}>
+                      {size}
+                    </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <PaginationItem>
+              <PaginationPrevious
+                  href="#"
+                  disabled={page <= 1}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (page > 1) setPage(page - 1);
+                  }}
+              />
+            </PaginationItem>
+
+            {Array.from({ length: totalPages || 1 }, (_, i) => i + 1).map((p) => (
+                <PaginationItem key={p}>
+                  <PaginationLink
+                      href="#"
+                      isActive={p === page}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setPage(p);
+                      }}
+                  >
+                    {p}
+                  </PaginationLink>
+                </PaginationItem>
+            ))}
+
+            {totalPages > 5 && page < totalPages - 2 && (
+                <PaginationItem>
+                  <PaginationEllipsis />
+                </PaginationItem>
+            )}
+
+            <PaginationItem>
+              <PaginationNext
+                  href="#"
+                  disabled={page >= totalPages}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (page < totalPages) setPage(page + 1);
+                  }}
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
+
       </main>
 
       <AddTaskDialog
@@ -210,6 +292,7 @@ export default function DashboardPage() {
         onOpenChange={setShowAddDialog}
         onTaskAdded={(newTask) => {
           setTasks([newTask, ...tasks]);
+          setPage(1);
           setShowAddDialog(false);
         }}
       />
