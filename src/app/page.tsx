@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/pagination";
 import {Input} from "@/components/ui/input";
 import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 
 interface Task {
   id: number;
@@ -186,23 +187,18 @@ export default function DashboardPage() {
                 <Card key={task.id} className={task.done ? "opacity-60" : ""}>
                   <CardContent className="py-4">
                     <div className="flex items-center gap-4">
-                      <Checkbox
+                      <Switch
                         checked={task.done}
                         onCheckedChange={(checked) =>
                           toggleTask(task.id, checked as boolean)
                         }
                       />
                       <div className="flex-1">
-                        <h3
-                          className={`font-medium ${
-                            task.done ? "line-through" : ""
-                          }`}
-                        >
+                        <h3 className={`font-medium ${task.done ? "line-through" : ""}`}>
                           {task.title}
                         </h3>
                         <p className="text-sm text-muted-foreground">
-                          Created{" "}
-                          {new Date(task.createdAt).toLocaleDateString()}
+                          Created {new Date(task.createdAt).toLocaleDateString()}
                         </p>
                       </div>
                       <Button
