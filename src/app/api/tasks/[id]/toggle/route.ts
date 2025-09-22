@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 
-export async function DELETE(
+export async function PATCH(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
@@ -30,13 +30,14 @@ export async function DELETE(
       return NextResponse.json({ error: "Task not found" }, { status: 404 });
     }
 
-    await prisma.task.delete({
+    const task = await prisma.task.update({
       where: { id: taskId },
+      data: { done: !existingTask.done },
     });
 
-    return NextResponse.json({ message: "Task deleted successfully" });
+    return NextResponse.json(task);
   } catch (error) {
-    console.error("Error deleting task:", error);
+    console.error("Error toggling task:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

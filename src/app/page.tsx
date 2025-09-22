@@ -51,7 +51,7 @@ export default function DashboardPage() {
 
   const toggleTask = async (taskId: number, done: boolean) => {
     try {
-      const response = await fetch(`/api/tasks/${taskId}`, {
+      const response = await fetch(`/api/tasks/${taskId}/toggle`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",

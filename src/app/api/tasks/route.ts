@@ -21,7 +21,6 @@ export async function GET(request: NextRequest) {
 
     const skip = (page - 1) * pageSize;
 
-    // Build where clause with search
     const where = {
       userId: session.user.id,
       ...(q && {
@@ -32,11 +31,9 @@ export async function GET(request: NextRequest) {
       }),
     };
 
-    // Get total count for pagination
     const total = await prisma.task.count({ where });
     const totalPages = Math.ceil(total / pageSize);
 
-    // Get paginated tasks
     const tasks = await prisma.task.findMany({
       where,
       orderBy: [{ done: "asc" }, { createdAt: "desc" }],
