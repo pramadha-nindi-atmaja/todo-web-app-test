@@ -19,23 +19,24 @@ export async function PATCH(
       return NextResponse.json({ error: "Invalid task ID" }, { status: 400 });
     }
 
-    const existingTask = await prisma.task.findFirst({
-      where: {
-        id: taskId,
-        userId: session.user.id,
-      },
+    const task = await prisma.task.findUnique({
+      where: { id: taskId },
     });
 
-    if (!existingTask) {
+    if (!task) {
       return NextResponse.json({ error: "Task not found" }, { status: 404 });
     }
 
-    const task = await prisma.task.update({
+    if (task.userId !== session.user.id) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    const updatedTask = await prisma.task.update({
       where: { id: taskId },
-      data: { done: !existingTask.done },
+      data: { done: !task.done },
     });
 
-    return NextResponse.json(task);
+    return NextResponse.json(updatedTask);
   } catch (error) {
     console.error("Error toggling task:", error);
     return NextResponse.json(

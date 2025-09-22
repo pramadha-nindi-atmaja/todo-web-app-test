@@ -7,13 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -25,7 +18,6 @@ interface Task {
   id: number;
   title: string;
   done: boolean;
-  priority: number;
   createdAt: string;
 }
 
@@ -41,7 +33,6 @@ export function AddTaskDialog({
   onTaskAdded,
 }: AddTaskDialogProps) {
   const [title, setTitle] = useState("");
-  const [priority, setPriority] = useState("1");
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -57,7 +48,6 @@ export function AddTaskDialog({
         },
         body: JSON.stringify({
           title: title.trim(),
-          priority: Number.parseInt(priority),
         }),
       });
 
@@ -65,7 +55,6 @@ export function AddTaskDialog({
         const newTask = await response.json();
         onTaskAdded(newTask);
         setTitle("");
-        setPriority("1");
       }
     } catch (error) {
       console.error("Failed to create task:", error);
@@ -93,19 +82,6 @@ export function AddTaskDialog({
               onChange={(e) => setTitle(e.target.value)}
               required
             />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="priority">Priority</Label>
-            <Select value={priority} onValueChange={setPriority}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select priority" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="1">Low</SelectItem>
-                <SelectItem value="2">Medium</SelectItem>
-                <SelectItem value="3">High</SelectItem>
-              </SelectContent>
-            </Select>
           </div>
           <div className="flex gap-2 pt-4">
             <Button type="submit" disabled={isLoading || !title.trim()}>
