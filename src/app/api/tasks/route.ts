@@ -7,7 +7,15 @@ export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session?.user?.id) {
+    if (!session?.user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const user = await prisma.user.findFirst({
+      where: { email: session.user.email },
+    });
+
+    if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -22,7 +30,7 @@ export async function GET(request: NextRequest) {
     const skip = (page - 1) * pageSize;
 
     const where = {
-      userId: session.user.id,
+      userId: user.id,
       ...(q && {
         title: {
           contains: q,
@@ -61,7 +69,15 @@ export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session?.user?.id) {
+    if (!session?.user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const user = await prisma.user.findFirst({
+      where: { email: session.user.email },
+    });
+
+    if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -85,7 +101,7 @@ export async function POST(request: NextRequest) {
     const task = await prisma.task.create({
       data: {
         title: trimmedTitle,
-        userId: session.user.id,
+        userId: user.id,
       },
     });
 
