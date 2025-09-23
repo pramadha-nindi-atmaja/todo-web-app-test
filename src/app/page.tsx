@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Spinner } from "@/components/ui/shadcn-io/spinner";
 
 interface Task {
   id: number;
@@ -44,6 +45,8 @@ export default function DashboardPage() {
   const [pageSize, setPageSize] = useState(5);
   const [search, setSearch] = useState("");
   const router = useRouter();
+  const [isTaskLoading, setIsTaskLoading] = useState(false);
+  const [togglingTasks, setTogglingTasks] = useState<Set<number>>(new Set());
 
   const fetchTasks = useCallback(
     async (page: number, query = "", size = pageSize) => {
@@ -68,23 +71,46 @@ export default function DashboardPage() {
     [pageSize]
   );
 
+  // const toggleTask = async (taskId: number, done: boolean) => {
+  //   try {
+  //     const response = await fetch(`/api/tasks/${taskId}/toggle`, {
+  //       method: "PATCH",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //       },
+  //       body: JSON.stringify({ done }),
+  //     });
+  //
+  //     if (response.ok) {
+  //       setTasks(
+  //         tasks.map((task) => (task.id === taskId ? { ...task, done } : task))
+  //       );
+  //     }
+  //   } catch (error) {
+  //     console.error("Failed to update task:", error);
+  //   }
+  // };
   const toggleTask = async (taskId: number, done: boolean) => {
+    setTogglingTasks((prev) => new Set(prev).add(taskId));
     try {
       const response = await fetch(`/api/tasks/${taskId}/toggle`, {
         method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ done }),
       });
-
       if (response.ok) {
-        setTasks(
-          tasks.map((task) => (task.id === taskId ? { ...task, done } : task))
+        setTasks((prev) =>
+          prev.map((task) => (task.id === taskId ? { ...task, done } : task))
         );
       }
     } catch (error) {
       console.error("Failed to update task:", error);
+    } finally {
+      setTogglingTasks((prev) => {
+        const copy = new Set(prev);
+        copy.delete(taskId);
+        return copy;
+      });
     }
   };
 
@@ -202,23 +228,22 @@ export default function DashboardPage() {
                   <Card key={task.id} className={task.done ? "opacity-60" : ""}>
                     <CardContent className="py-4">
                       <div className="flex items-center gap-4">
-                        <Switch
-                          checked={task.done}
-                          onCheckedChange={(checked) =>
-                            toggleTask(task.id, checked as boolean)
-                          }
-                        />
+                        {togglingTasks.has(task.id) ? (
+                          <Spinner className="w-5 h-5" />
+                        ) : (
+                          <Switch
+                            checked={task.done}
+                            onCheckedChange={(checked) =>
+                              toggleTask(task.id, checked as boolean)
+                            }
+                          />
+                        )}
                         <div className="flex-1">
-                          <h3
-                            className={`font-medium ${
-                              task.done ? "line-through" : ""
-                            }`}
-                          >
+                          <h3 className={`font-medium ${task.done ? "line-through" : ""}`}>
                             {task.title}
                           </h3>
                           <p className="text-sm text-muted-foreground">
-                            Created{" "}
-                            {new Date(task.createdAt).toLocaleDateString()}
+                            Created {new Date(task.createdAt).toLocaleDateString()}
                           </p>
                         </div>
                         <Button
@@ -231,6 +256,7 @@ export default function DashboardPage() {
                       </div>
                     </CardContent>
                   </Card>
+
                 ))
               )}
             </>
