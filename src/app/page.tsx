@@ -246,7 +246,7 @@ export default function DashboardPage() {
                           onClick={() => confirmDeleteTask(task.id)}
                           disabled={deletingTasks.has(task.id)}
                         >
-                          {deletingTasks.has(task.id) ? <Spinner className="w-4 h-4" /> : "Delete"}
+                          Delete
                         </Button>
                       </div>
                     </CardContent>
