@@ -1,4 +1,4 @@
-Prisma Setup
+## Prisma Setup
 
 This project uses Prisma
 as the ORM. To get Prisma running:
@@ -12,6 +12,16 @@ npx prisma migrate dev --name init
 ```
 
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+
+## Environment Setting
+This project use google credentials as Oauth Login
+
+```bash
+DATABASE_URL="postgresql://username:password@localhost:5432/db"
+GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret
+NEXTAUTH_SECRET=your_random_secret
+```
 
 ## Getting Started
 
