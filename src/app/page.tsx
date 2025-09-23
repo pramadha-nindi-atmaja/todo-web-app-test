@@ -25,6 +25,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface Task {
   id: number;
@@ -109,13 +110,6 @@ export default function DashboardPage() {
     }
   }, [status, page, router, fetchTasks]);
 
-  if (status === "loading" || isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-lg">Loading...</div>
-      </div>
-    );
-  }
   const handleSearch = () => {
     setPage(1);
     fetchTasks(1, search);
@@ -176,48 +170,70 @@ export default function DashboardPage() {
         </div>
 
         <div className="grid gap-4">
-          {tasks.length === 0 ? (
-            <Card>
-              <CardContent className="py-8 text-center">
-                <p className="text-muted-foreground">
-                  No tasks yet. Create your first task!
-                </p>
-              </CardContent>
-            </Card>
-          ) : (
-            tasks.map((task) => (
-              <Card key={task.id} className={task.done ? "opacity-60" : ""}>
-                <CardContent className="py-4">
-                  <div className="flex items-center gap-4">
-                    <Switch
-                      checked={task.done}
-                      onCheckedChange={(checked) =>
-                        toggleTask(task.id, checked as boolean)
-                      }
-                    />
-                    <div className="flex-1">
-                      <h3
-                        className={`font-medium ${
-                          task.done ? "line-through" : ""
-                        }`}
-                      >
-                        {task.title}
-                      </h3>
-                      <p className="text-sm text-muted-foreground">
-                        Created {new Date(task.createdAt).toLocaleDateString()}
-                      </p>
+          {status === "loading" || isLoading ? (
+            <>
+              {Array.from({ length: 3 }).map((_, i) => (
+                <Card key={i}>
+                  <CardContent className="py-4">
+                    <div className="flex items-center gap-4">
+                      <Skeleton className="h-6 w-6 rounded-full" />
+                      <div className="flex-1 space-y-2">
+                        <Skeleton className="h-4 w-2/3" />
+                        <Skeleton className="h-3 w-1/3" />
+                      </div>
+                      <Skeleton className="h-8 w-16 rounded-md" />
                     </div>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => deleteTask(task.id)}
-                    >
-                      Delete
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))
+                  </CardContent>
+                </Card>
+              ))}
+            </>
+          ) : (
+            <>
+              {tasks.length === 0 ? (
+                <Card>
+                  <CardContent className="py-8 text-center">
+                    <p className="text-muted-foreground">
+                      No tasks yet. Create your first task!
+                    </p>
+                  </CardContent>
+                </Card>
+              ) : (
+                tasks.map((task) => (
+                  <Card key={task.id} className={task.done ? "opacity-60" : ""}>
+                    <CardContent className="py-4">
+                      <div className="flex items-center gap-4">
+                        <Switch
+                          checked={task.done}
+                          onCheckedChange={(checked) =>
+                            toggleTask(task.id, checked as boolean)
+                          }
+                        />
+                        <div className="flex-1">
+                          <h3
+                            className={`font-medium ${
+                              task.done ? "line-through" : ""
+                            }`}
+                          >
+                            {task.title}
+                          </h3>
+                          <p className="text-sm text-muted-foreground">
+                            Created{" "}
+                            {new Date(task.createdAt).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => deleteTask(task.id)}
+                        >
+                          Delete
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))
+              )}
+            </>
           )}
         </div>
         <Pagination>
