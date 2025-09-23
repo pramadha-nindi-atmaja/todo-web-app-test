@@ -28,6 +28,8 @@ import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/shadcn-io/spinner";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Toaster } from "@/components/ui/sonner";
+import { toast } from "sonner";
 
 interface Task {
   id: number;
@@ -85,9 +87,13 @@ export default function DashboardPage() {
         setTasks((prev) =>
           prev.map((task) => (task.id === taskId ? { ...task, done } : task))
         );
+        toast.success(`Task ${done ? "completed" : "marked pending"}!`);
+      } else {
+        toast.error("Failed to update task.");
       }
     } catch (error) {
       console.error("Failed to update task:", error);
+      toast.error("Failed to update task.");
     } finally {
       setTogglingTasks((prev) => {
         const copy = new Set(prev);
@@ -96,6 +102,7 @@ export default function DashboardPage() {
       });
     }
   };
+
 
   const confirmDeleteTask = (taskId: number) => {
     setTaskToDelete(taskId);
@@ -110,8 +117,10 @@ export default function DashboardPage() {
       if (response.ok) {
         setTasks((prev) => prev.filter((task) => task.id !== taskToDelete));
       }
+      toast.success("Task deleted!");
     } catch (error) {
       console.error("Failed to delete task:", error);
+      toast.error("Failed to delete task.");
     } finally {
       setDeletingTasks((prev) => {
         const copy = new Set(prev);
@@ -153,6 +162,7 @@ export default function DashboardPage() {
       </header>
 
       <main className="container mx-auto px-4 py-8">
+        <Toaster position="top-right" />
         <div className="mb-6">
           <div className="flex items-center justify-between mb-4">
             <div>
@@ -334,6 +344,7 @@ export default function DashboardPage() {
           setTasks([newTask, ...tasks]);
           setPage(1);
           setShowAddDialog(false);
+          toast.success("Task created!");
         }}
       />
 
