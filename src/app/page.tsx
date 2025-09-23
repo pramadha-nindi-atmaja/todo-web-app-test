@@ -27,6 +27,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/shadcn-io/spinner";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 interface Task {
   id: number;
@@ -45,8 +46,9 @@ export default function DashboardPage() {
   const [pageSize, setPageSize] = useState(5);
   const [search, setSearch] = useState("");
   const router = useRouter();
-  const [isTaskLoading, setIsTaskLoading] = useState(false);
   const [togglingTasks, setTogglingTasks] = useState<Set<number>>(new Set());
+  const [deletingTasks, setDeletingTasks] = useState<Set<number>>(new Set());
+  const [taskToDelete, setTaskToDelete] = useState<number | null>(null);
 
   const fetchTasks = useCallback(
     async (page: number, query = "", size = pageSize) => {
@@ -95,17 +97,28 @@ export default function DashboardPage() {
     }
   };
 
-  const deleteTask = async (taskId: number) => {
-    try {
-      const response = await fetch(`/api/tasks/${taskId}`, {
-        method: "DELETE",
-      });
+  const confirmDeleteTask = (taskId: number) => {
+    setTaskToDelete(taskId);
+  };
 
+  const deleteTask = async () => {
+    if (taskToDelete === null) return;
+
+    setDeletingTasks((prev) => new Set(prev).add(taskToDelete));
+    try {
+      const response = await fetch(`/api/tasks/${taskToDelete}`, { method: "DELETE" });
       if (response.ok) {
-        setTasks(tasks.filter((task) => task.id !== taskId));
+        setTasks((prev) => prev.filter((task) => task.id !== taskToDelete));
       }
     } catch (error) {
       console.error("Failed to delete task:", error);
+    } finally {
+      setDeletingTasks((prev) => {
+        const copy = new Set(prev);
+        copy.delete(taskToDelete);
+        return copy;
+      });
+      setTaskToDelete(null);
     }
   };
 
@@ -230,9 +243,10 @@ export default function DashboardPage() {
                         <Button
                           variant="destructive"
                           size="sm"
-                          onClick={() => deleteTask(task.id)}
+                          onClick={() => confirmDeleteTask(task.id)}
+                          disabled={deletingTasks.has(task.id)}
                         >
-                          Delete
+                          {deletingTasks.has(task.id) ? <Spinner className="w-4 h-4" /> : "Delete"}
                         </Button>
                       </div>
                     </CardContent>
@@ -322,6 +336,31 @@ export default function DashboardPage() {
           setShowAddDialog(false);
         }}
       />
+
+      <Dialog open={taskToDelete !== null} onOpenChange={() => setTaskToDelete(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirm Delete</DialogTitle>
+          </DialogHeader>
+          <p>Are you sure you want to delete this task?</p>
+          <DialogFooter className="flex justify-end gap-2">
+            <Button variant="secondary" onClick={() => setTaskToDelete(null)}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={deleteTask}
+              disabled={taskToDelete !== null && deletingTasks.has(taskToDelete)}
+            >
+              {taskToDelete !== null && deletingTasks.has(taskToDelete) ? (
+                <Spinner className="w-4 h-4" />
+              ) : (
+                "Delete"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
