@@ -71,25 +71,6 @@ export default function DashboardPage() {
     [pageSize]
   );
 
-  // const toggleTask = async (taskId: number, done: boolean) => {
-  //   try {
-  //     const response = await fetch(`/api/tasks/${taskId}/toggle`, {
-  //       method: "PATCH",
-  //       headers: {
-  //         "Content-Type": "application/json",
-  //       },
-  //       body: JSON.stringify({ done }),
-  //     });
-  //
-  //     if (response.ok) {
-  //       setTasks(
-  //         tasks.map((task) => (task.id === taskId ? { ...task, done } : task))
-  //       );
-  //     }
-  //   } catch (error) {
-  //     console.error("Failed to update task:", error);
-  //   }
-  // };
   const toggleTask = async (taskId: number, done: boolean) => {
     setTogglingTasks((prev) => new Set(prev).add(taskId));
     try {
